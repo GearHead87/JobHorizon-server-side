@@ -59,11 +59,12 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
 
-        const db = client.db("TouristDB");
+        const db = client.db("JobHorizonDB");
+        const jobsCollection = db.collection('jobs') 
 
 
         //creating JWT Token
-        app.post("/jwt", logger, async (req, res) => {
+        app.post("/jwt", async (req, res) => {
             const user = req.body;
             console.log("user for token", user);
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
@@ -81,6 +82,16 @@ async function run() {
         });
 
         // services
+        app.get('/jobs', async(req, res)=>{
+            const result = await jobsCollection.find().toArray();
+            res.send(result);
+        })
+        app.post('/add-job', async(req, res)=>{
+            const jobData = req.body;
+            // console.log(jobData);
+            const result = await jobsCollection.insertOne(jobData);
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
