@@ -60,7 +60,7 @@ async function run() {
         // await client.connect();
 
         const db = client.db("JobHorizonDB");
-        const jobsCollection = db.collection('jobs') 
+        const jobsCollection = db.collection('jobs')
 
 
         //creating JWT Token
@@ -82,11 +82,19 @@ async function run() {
         });
 
         // services
-        app.get('/jobs', async(req, res)=>{
-            const result = await jobsCollection.find().toArray();
+        app.get('/jobs', async (req, res) => {
+            const search = req.query.search;
+            let query = {}
+            if (search) {
+                query = {
+                    jobTitle: { $regex: search, $options: 'i' }
+                }
+            }
+
+            const result = await jobsCollection.find(query).toArray();
             res.send(result);
         })
-        app.post('/add-job', async(req, res)=>{
+        app.post('/add-job', async (req, res) => {
             const jobData = req.body;
             // console.log(jobData);
             const result = await jobsCollection.insertOne(jobData);
