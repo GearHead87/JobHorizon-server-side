@@ -140,6 +140,21 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/applied-jobs/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = req.query.filter;
+            let query = {}
+            query = { 'application.applicantUserEmail': email }
+            if (filter) {
+                query.jobCategory= filter 
+                
+            }
+            console.log(filter, query);
+            
+            const result = await appliedJobsCollection.find(query).toArray();
+            res.send(result);
+        })
+
         app.post('/apply-job', async (req, res) => {
             const jobData = req.body;
             // console.log(jobData);
