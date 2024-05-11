@@ -76,7 +76,7 @@ async function run() {
         //clearing JWT Token
         app.post("/logout", async (req, res) => {
             const user = req.body;
-            console.log("logging out", user);
+            // console.log("logging out", user);
             res
                 .clearCookie("token", { ...cookieOptions, maxAge: 0 })
                 .send({ success: true });
@@ -113,7 +113,7 @@ async function run() {
                     ...jobData,
                 },
             }
-            console.log(jobData);
+            // console.log(jobData);
             const result = await jobsCollection.updateOne(query, updateDoc, options)
 
             res.send(result);
@@ -149,7 +149,7 @@ async function run() {
                 query.jobCategory= filter 
                 
             }
-            console.log(filter, query);
+            // console.log(filter, query);
             
             const result = await appliedJobsCollection.find(query).toArray();
             res.send(result);
@@ -165,7 +165,7 @@ async function run() {
                 jobId: jobData.jobId,
             }
             const alreadyApplied = await appliedJobsCollection.findOne(query);
-            console.log(alreadyApplied)
+            // console.log(alreadyApplied)
             if (alreadyApplied) {
                 return res.status(400).send({ message: "You have already applied on this job." })
             }
