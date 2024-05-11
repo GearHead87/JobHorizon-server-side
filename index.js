@@ -61,12 +61,13 @@ async function run() {
 
         const db = client.db("JobHorizonDB");
         const jobsCollection = db.collection('jobs')
+        const appliedJobsCollection = db.collection('appliedJobs')
 
 
         //creating JWT Token
         app.post("/jwt", async (req, res) => {
             const user = req.body;
-            console.log("user for token", user);
+            // console.log("user for token", user);
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
 
             res.cookie("token", token, cookieOptions).send({ success: true });
@@ -81,7 +82,7 @@ async function run() {
                 .send({ success: true });
         });
 
-        // services
+        // API Services
         app.get('/jobs', async (req, res) => {
             const search = req.query.search;
             let query = {}
@@ -94,12 +95,80 @@ async function run() {
             const result = await jobsCollection.find(query).toArray();
             res.send(result);
         })
+
+        app.get('/job/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await jobsCollection.findOne(query);
+            res.send(result);
+        })
+
+        app.put('/job/:id', async (req, res) => {
+            const id = req.params.id;
+            const jobData = req.body;
+            const query = { _id: new ObjectId(id) };
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    ...jobData,
+                },
+            }
+            console.log(jobData);
+            const result = await jobsCollection.updateOne(query, updateDoc, options)
+
+            res.send(result);
+        })
+
+        app.delete('/job/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await jobsCollection.deleteOne(query);
+            res.send(result);
+        })
+
         app.post('/add-job', async (req, res) => {
             const jobData = req.body;
             // console.log(jobData);
             const result = await jobsCollection.insertOne(jobData);
             res.send(result);
         })
+
+        app.get('/my-jobs/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { userEmail: email }
+            const result = await jobsCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.post('/apply-job', async (req, res) => {
+            const jobData = req.body;
+            // console.log(jobData);
+
+            // Check Duplicate Request
+            const query = {
+                applicantUserEmail: jobData.applicantUserEmail,
+                jobId: jobData.jobId,
+            }
+            const alreadyApplied = await appliedJobsCollection.findOne(query);
+            console.log(alreadyApplied)
+            if (alreadyApplied) {
+                return res.status(400).send({ message: "You have already applied on this job." })
+            }
+
+            const result = await appliedJobsCollection.insertOne(jobData);
+            // console.log(result)
+            // Increase Applicant Number
+            const updateDoc = {
+                $inc: { jobApplicantsNumber: 1 }
+            }
+            const jobQuery = { _id: new ObjectId(jobData.jobId) }
+            const updateJobApplicantsNumber = await jobsCollection.updateOne(jobQuery, updateDoc)
+            // console.log(updateJobApplicantsNumber);
+            res.send({ message: "success" });
+
+        })
+
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
