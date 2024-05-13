@@ -11,7 +11,7 @@ const corsOptions = {
     origin: [
         'http://localhost:5173',
         'http://localhost:5174',
-        //   'https://solosphere.web.app',
+        'https://b9a11-jobhorizon-gearhead87.vercel.app',
     ],
     credentials: true,
     optionSuccessStatus: 200,
