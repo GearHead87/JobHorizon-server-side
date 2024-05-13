@@ -133,24 +133,30 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/my-jobs/:email', async (req, res) => {
+        app.get('/my-jobs/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
+            if (req.user?.email !== email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
             const query = { userEmail: email }
             const result = await jobsCollection.find(query).toArray();
             res.send(result);
         })
 
-        app.get('/applied-jobs/:email', async (req, res) => {
+        app.get('/applied-jobs/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
+            if (req.user?.email !== email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
             const filter = req.query.filter;
             let query = {}
             query = { 'application.applicantUserEmail': email }
             if (filter) {
-                query.jobCategory= filter 
-                
+                query.jobCategory = filter
+
             }
             // console.log(filter, query);
-            
+
             const result = await appliedJobsCollection.find(query).toArray();
             res.send(result);
         })
