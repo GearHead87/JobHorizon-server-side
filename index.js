@@ -103,9 +103,13 @@ async function run() {
             res.send(result);
         })
 
-        app.put('/job/:id', async (req, res) => {
+        app.put('/job/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const jobData = req.body;
+            const JobUserEmail = req.body.userEmail;
+            if (JobUserEmail === req.user.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
             const query = { _id: new ObjectId(id) };
             const options = { upsert: true }
             const updateDoc = {
@@ -115,15 +119,25 @@ async function run() {
             }
             // console.log(jobData);
             const result = await jobsCollection.updateOne(query, updateDoc, options)
-
-            res.send(result);
+            if (result.modifiedCount > 0) {
+                return res.status(200).send({ success: true, message: "Job Updated Successfully" })
+            }
+            else {
+                return res.status(404).send({ success: false, message: "Job can't Updated" })
+            }
         })
 
         app.delete('/job/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await jobsCollection.deleteOne(query);
-            res.send(result);
+            if (result.deletedCount > 0) {
+                return res.status(200).send({ success: true, message: 'Job deleted successfully' });
+            }
+            else {
+                return res.status(404).send({ success: false, message: 'Job Not found or already deleted' });
+            }
+
         })
 
         app.post('/add-job', async (req, res) => {
