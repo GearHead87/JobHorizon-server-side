@@ -11,7 +11,7 @@ const corsOptions = {
     origin: [
         'http://localhost:5173',
         'http://localhost:5174',
-        'https://b9a11-jobhorizon-gearhead87.vercel.app',
+        'https://b9a11-jobhorizon.web.app',
     ],
     credentials: true,
     optionSuccessStatus: 200,
@@ -106,9 +106,9 @@ async function run() {
         app.put('/job/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const jobData = req.body;
-            const JobUserEmail = req.body.userEmail;
-            if (JobUserEmail === req.user.email) {
-                return res.status(403).send({ message: 'forbidden access' })
+            const JobUserEmail = req.body?.userEmail;
+            if (JobUserEmail !== req.user.email) {
+                return res.status(403).send({ message: 'Forbidden Access' })
             }
             const query = { _id: new ObjectId(id) };
             const options = { upsert: true }
