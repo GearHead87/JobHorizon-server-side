@@ -140,11 +140,19 @@ async function run() {
 
         })
 
-        app.post('/add-job', async (req, res) => {
+        app.post('/add-job', verifyToken, async (req, res) => {
+            if (!req.user?.email) {
+                return res.status(401).send({ message: 'unauthorized access' })
+            }
             const jobData = req.body;
             // console.log(jobData);
             const result = await jobsCollection.insertOne(jobData);
-            res.send(result);
+            if (result.acknowledged === true) {
+                return res.status(200).send({ success: true, message: 'Job Added Successfully' });
+            }
+            else {
+                return res.status(404).send({ success: false, message: 'Internal Error' });
+            }
         })
 
         app.get('/my-jobs/:email', verifyToken, async (req, res) => {
@@ -175,31 +183,37 @@ async function run() {
             res.send(result);
         })
 
-        app.post('/apply-job', async (req, res) => {
+        app.post('/apply-job', verifyToken, async (req, res) => {
+            if (!req.user?.email) {
+                return res.status(401).send({ message: 'Unauthorized Access' })
+            }
             const jobData = req.body;
-            // console.log(jobData);
-
             // Check Duplicate Request
             const query = {
                 applicantUserEmail: jobData.applicantUserEmail,
                 jobId: jobData.jobId,
             }
             const alreadyApplied = await appliedJobsCollection.findOne(query);
-            // console.log(alreadyApplied)
             if (alreadyApplied) {
                 return res.status(400).send({ message: "You have already applied on this job." })
             }
-
             const result = await appliedJobsCollection.insertOne(jobData);
-            // console.log(result)
+
             // Increase Applicant Number
             const updateDoc = {
                 $inc: { jobApplicantsNumber: 1 }
             }
             const jobQuery = { _id: new ObjectId(jobData.jobId) }
             const updateJobApplicantsNumber = await jobsCollection.updateOne(jobQuery, updateDoc)
-            // console.log(updateJobApplicantsNumber);
-            res.send({ message: "success" });
+
+            // Result send
+            if (result.acknowledged === true && updateJobApplicantsNumber.modifiedCount > 0) {
+
+                return res.status(200).send({ success: true, message: "Job Apply Successful" });
+            }
+            else {
+                return res.status(404).send({ success: false, message: "Job Apply Unsuccessfull" })
+            }
 
         })
 
