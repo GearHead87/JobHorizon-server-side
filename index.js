@@ -190,7 +190,7 @@ async function run() {
             const jobData = req.body;
             // Check Duplicate Request
             const query = {
-                applicantUserEmail: jobData.applicantUserEmail,
+                'application.applicantUserEmail': jobData.application.applicantUserEmail,
                 jobId: jobData.jobId,
             }
             const alreadyApplied = await appliedJobsCollection.findOne(query);
